@@ -31,10 +31,14 @@ Dump stacks from your application:
 $ curl localhost:8081/debug/pprof/thread?debug=1
 ```
 
-## Contributing
+# Compatibility
+
+pypprof is compatible with Python >= 2.7. Memory profiling is only available by default in Python >= 3.4. To enable memory profiling in earlier Pythons, you must patch Python and manually install [mprofile](https://github.com/timpalpant/mprofile).
+
+# Contributing
 
 Pull requests and issues are welcomed!
 
-## License
+# License
 
 pypprof is released under the [GNU Lesser General Public License, Version 3.0](https://www.gnu.org/licenses/lgpl-3.0.en.html)
