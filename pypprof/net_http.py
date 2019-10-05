@@ -11,7 +11,12 @@ import six
 from six.moves.BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from six.moves.urllib.parse import parse_qs, urlparse
 
-import mprofile
+try:
+    import mprofile
+    has_mprofile = True
+except ImportError:
+    has_mprofile = False
+
 from zprofile.cpu_profiler import CPUProfiler
 from zprofile.wall_profiler import WallProfiler
 from pypprof.builder import Builder
@@ -99,6 +104,8 @@ class PProfRequestHandler(BaseHTTPRequestHandler):
     def heap(self, query):
         if query.get("gc"):
             gc.collect()
+        if not has_mprofile:
+            return self.send_error(412, "mprofile must be installed to enable heap profiling")
         if not mprofile.is_tracing():
             return self.send_error(412, "Heap profiling is not enabled")
         snap = mprofile.take_snapshot()
