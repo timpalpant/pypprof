@@ -23,7 +23,7 @@ from pypprof.builder import Builder
 from pypprof import thread_profiler
 
 
-_wall_profiler = WallProfiler()
+_wall_profiler = None
 
 
 def start_pprof_server(host='localhost', port=8080):
@@ -38,6 +38,9 @@ def start_pprof_server(host='localhost', port=8080):
     # on the main thread. So do it now before spawning the background thread.
     # As a result, starting the pprof server has the side effect of registering the
     # wall-clock profiler's SIGALRM handler, which may conflict with other uses.
+    global _wall_profiler
+    if _wall_profiler is None:
+        _wall_profiler = WallProfiler()
     _wall_profiler.register_handler()
 
     server = HTTPServer((host, port), PProfRequestHandler)
