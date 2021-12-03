@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import gc
 import pkg_resources
+import socket
 import sys
 import threading
 import time
@@ -25,6 +26,12 @@ from pypprof import thread_profiler
 
 _wall_profiler = WallProfiler()
 
+class ProfilerHTTPServer(HTTPServer):
+    '''We do not want modify the global HTTPServer.address_family for do not
+    break user's codes, so add a subclass for isolation.
+    '''
+    address_family = socket.AF_INET
+
 
 def start_pprof_server(host='localhost', port=8080):
     '''Start a pprof server at the given host:port in a background thread.
@@ -40,7 +47,9 @@ def start_pprof_server(host='localhost', port=8080):
     # wall-clock profiler's SIGALRM handler, which may conflict with other uses.
     _wall_profiler.register_handler()
 
-    server = HTTPServer((host, port), PProfRequestHandler)
+    if ':' in host:
+        ProfilerHTTPServer.address_family = socket.AF_INET6
+    server = ProfilerHTTPServer((host, port), PProfRequestHandler)
     bg_thread = threading.Thread(target=server.serve_forever)
     bg_thread.daemon = True
     bg_thread.start()
