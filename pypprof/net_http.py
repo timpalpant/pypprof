@@ -3,9 +3,9 @@ from __future__ import print_function
 import gc
 import pkg_resources
 import sys
-import threading
 import time
 import traceback
+from threading import active_count, Thread
 
 import six
 from six.moves.BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
@@ -21,6 +21,13 @@ from zprofile.cpu_profiler import CPUProfiler
 from zprofile.wall_profiler import WallProfiler
 from pypprof.builder import Builder
 from pypprof import thread_profiler
+
+try:
+    from gevent import monkey
+    active_count = monkey.get_original("threading", "active_count")
+    Thread = monkey.get_original("threading", "Thread")
+except ImportError:
+    pass
 
 
 _wall_profiler = WallProfiler()
@@ -41,7 +48,7 @@ def start_pprof_server(host='localhost', port=8080):
     _wall_profiler.register_handler()
 
     server = HTTPServer((host, port), PProfRequestHandler)
-    bg_thread = threading.Thread(target=server.serve_forever)
+    bg_thread = Thread(target=server.serve_forever)
     bg_thread.daemon = True
     bg_thread.start()
     return server
@@ -80,7 +87,7 @@ class PProfRequestHandler(BaseHTTPRequestHandler):
 
     def index(self):
         template = pkg_resources.resource_string(__name__, "index.html").decode("utf-8")
-        body = template.format(num_threads=threading.active_count())
+        body = template.format(num_threads=active_count())
 
         self.send_response(200)
         self.send_header("X-Content-Type-Options", "nosniff")
